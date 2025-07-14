@@ -1,10 +1,9 @@
+```markdown
 # Fitbit Provider for OAuth 2.0 Client
 
 This package provides Fitbit OAuth 2.0 support for the PHP League's [OAuth 2.0 Client](https://github.com/thephpleague/oauth2-client).
 
 This package is compliant with [PSR-1][], [PSR-2][], [PSR-4][], and [PSR-7][]. If you notice compliance oversights, please send a patch via pull request.
-
-Developers can register applications to use the Fitbit API at <https://dev.fitbit.com/apps>.
 
 ## Requirements
 
@@ -17,7 +16,7 @@ The following versions of PHP are supported.
 To install, use composer:
 
 ```
-composer require djchen/oauth2-fitbit
+composer require mousel68/oauth2-mousel-fitbit
 ```
 
 ## Usage
@@ -85,7 +84,7 @@ if (!isset($_GET['code'])) {
             Fitbit::METHOD_GET,
             Fitbit::BASE_FITBIT_API_URL . '/1/user/-/profile.json',
             $accessToken,
-            ['headers' => [Fitbit::HEADER_ACCEPT_LANG => 'en_US'], [Fitbit::HEADER_ACCEPT_LOCALE => 'en_US']]
+            ['headers' => [Fitbit::HEADER_ACCEPT_LANG => 'en_US', Fitbit::HEADER_ACCEPT_LOCALE => 'en_US']]
             // Fitbit uses the Accept-Language for setting the unit system used
             // and setting Accept-Locale will return a translated response if available.
             // https://dev.fitbit.com/docs/basics/#localization
@@ -130,6 +129,46 @@ if ($existingAccessToken->hasExpired()) {
 }
 ```
 
+### Managing Rate Limits
+
+Fitbit enforces rate limits on API calls. This library provides a convenient way to parse rate limit information from API responses.
+
+After making a request and getting the response:
+
+```php
+// Assuming $response is a Psr\Http\Message\ResponseInterface from an API call
+$rateLimit = $provider->getFitbitRateLimit($response);
+
+$limit = $rateLimit->getLimit() ?? 'Unknown';
+$remaining = $rateLimit->getRemaining() ?? 'Unknown';
+$reset = $rateLimit->getReset() ?? 'Unknown';
+
+echo "API Rate Limit: {$limit}\n";
+echo "Remaining Calls: {$remaining}\n";
+echo "Resets In: {$reset} seconds\n";
+
+if ($response->getStatusCode() === 429) {
+    $retryAfter = $rateLimit->getRetryAfter() ?? 'Unknown';
+    echo "Retry After: {$retryAfter} seconds\n";
+}
+```
+
+### Revoking Access
+
+To revoke an access token, use the revoke method:
+
+```php
+// Assuming $accessToken is a valid League\OAuth2\Client\Token\AccessToken
+$response = $provider->revoke($accessToken);
+
+// Check the response for success (e.g., status code 204)
+if ($response->getStatusCode() === 204) {
+    echo "Access token revoked successfully.\n";
+} else {
+    echo "Failed to revoke access token.\n";
+}
+```
+
 ## Testing
 
 ``` bash
@@ -138,13 +177,14 @@ $ ./vendor/bin/phpunit
 
 ## Contributing
 
-Please see [CONTRIBUTING](https://github.com/djchen/oauth2-fitbit/blob/master/CONTRIBUTING.md) for details.
+Please see [CONTRIBUTING](https://github.com/mousel68/oauth2-mousel-fitbit/blob/master/CONTRIBUTING.md) for details.
 
 ## License
 
-The MIT License (MIT). Please see [License File](https://github.com/djchen/oauth2-fitbit/blob/master/LICENSE) for more information.
+The MIT License (MIT). Please see [License File](https://github.com/mousel68/oauth2-mousel-fitbit/blob/master/LICENSE) for more information.
 
 [PSR-1]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-1-basic-coding-standard.md
 [PSR-2]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md
 [PSR-4]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-4-autoloader.md
 [PSR-7]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-7-http-message.md
+```
