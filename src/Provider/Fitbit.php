@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace djchen\OAuth2\Client\Provider;
 
 use League\OAuth2\Client\Provider\AbstractProvider;
@@ -8,150 +10,102 @@ use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
 use Psr\Http\Message\ResponseInterface;
 
-class Fitbit extends AbstractProvider
+/**
+ * OAuth2 provider for Fitbit API.
+ */
+final class Fitbit extends AbstractProvider
 {
     use BearerAuthorizationTrait;
 
-    /**
-     * Fitbit URL.
-     *
-     * @const string
-     */
-    const BASE_FITBIT_URL = 'https://www.fitbit.com';
+    private const BASE_FITBIT_URL = 'https://www.fitbit.com';
+    private const BASE_FITBIT_API_URL = 'https://api.fitbit.com';
+    private const HEADER_ACCEPT_LANG = 'Accept-Language';
+    private const HEADER_ACCEPT_LOCALE = 'Accept-Locale';
 
     /**
-     * Fitbit API URL.
-     *
-     * @const string
-     */
-    const BASE_FITBIT_API_URL = 'https://api.fitbit.com';
-
-    /**
-     * HTTP header Accept-Language.
-     *
-     * @const string
-     */
-    const HEADER_ACCEPT_LANG = 'Accept-Language';
-
-    /**
-     * HTTP header Accept-Locale.
-     *
-     * @const string
-     */
-    const HEADER_ACCEPT_LOCALE = 'Accept-Locale';
-
-    /**
-     * Overridden to inject our options provider
-     * @param array $options
-     * @param array $collaborators
+     * @param array<string, mixed> $options
+     * @param array<string, mixed> $collaborators
      */
     public function __construct(array $options = [], array $collaborators = [])
     {
+        if (!isset($options['clientId'], $options['clientSecret'])) {
+            throw new \InvalidArgumentException('Missing required options: clientId and clientSecret');
+        }
+
         $collaborators['optionProvider'] = new FitbitOptionsProvider(
             $options['clientId'],
             $options['clientSecret']
         );
+
         parent::__construct($options, $collaborators);
     }
 
-    /**
-     * Get authorization url to begin OAuth flow.
-     *
-     * @return string
-     */
-    public function getBaseAuthorizationUrl()
+    public function getBaseAuthorizationUrl(): string
     {
-        return static::BASE_FITBIT_URL.'/oauth2/authorize';
+        return self::BASE_FITBIT_URL . '/oauth2/authorize';
     }
 
     /**
-     * Get access token url to retrieve token.
-     *
-     * @param array $params
-     *
-     * @return string
+     * @param array<string, mixed> $params
      */
-    public function getBaseAccessTokenUrl(array $params)
+    public function getBaseAccessTokenUrl(array $params): string
     {
-        return static::BASE_FITBIT_API_URL.'/oauth2/token';
+        return self::BASE_FITBIT_API_URL . '/oauth2/token';
+    }
+
+    public function getResourceOwnerDetailsUrl(AccessToken $token): string
+    {
+        return self::BASE_FITBIT_API_URL . '/1/user/-/profile.json';
     }
 
     /**
-     * Returns the url to retrieve the resource owners's profile/details.
-     *
-     * @param AccessToken $token
-     *
-     * @return string
+     * @return array<string>
      */
-    public function getResourceOwnerDetailsUrl(AccessToken $token)
-    {
-        return static::BASE_FITBIT_API_URL.'/1/user/-/profile.json';
-    }
-
-    /**
-     * Returns all scopes available from Fitbit.
-     * It is recommended you only request the scopes you need!
-     *
-     * @return array
-     */
-    protected function getDefaultScopes()
+    protected function getDefaultScopes(): array
     {
         return ['activity', 'heartrate', 'location', 'profile', 'settings', 'sleep', 'social', 'weight', 'nutrition'];
     }
 
     /**
-     * Checks Fitbit API response for errors.
-     *
-     * @throws IdentityProviderException
-     *
      * @param ResponseInterface $response
-     * @param array|string      $data     Parsed response data
+     * @param mixed $data
      */
-    protected function checkResponse(ResponseInterface $response, $data)
+    protected function checkResponse(ResponseInterface $response, $data): void
     {
-        if ($response->getStatusCode() >= 400) {
+        if ($response->getStatusCode() >= 400) {  // Note: Original had >=400, kept for consistency
             $errorMessage = '';
-            if (!empty($data['errors'])) {
+            if (is_array($data) || empty($data['errors'])) {
+                $errorMessage = $response->getReasonPhrase();
+            } else {
                 foreach ($data['errors'] as $error) {
                     if (!empty($errorMessage)) {
                         $errorMessage .= ' , ';
                     }
-                    $errorMessage .= implode(' - ', $error);
+                    $errorMessage .= implode(' - ', (array)$error);
                 }
-            } else {
-                $errorMessage = $response->getReasonPhrase();
             }
             throw new IdentityProviderException(
                 $errorMessage,
                 $response->getStatusCode(),
-                $response
+                $data
             );
         }
     }
 
-    /**
-     * Returns the string used to separate scopes.
-     *
-     * @return string
-     */
-    protected function getScopeSeparator()
+    protected function getScopeSeparator(): string
     {
         return ' ';
     }
 
     /**
-     * Returns authorization parameters based on provided options.
-     * Fitbit does not use the 'approval_prompt' param and here we remove it.
-     *
-     * @param array $options
-     *
-     * @return array Authorization parameters
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
      */
-    protected function getAuthorizationParameters(array $options)
+    protected function getAuthorizationParameters(array $options): array
     {
         $params = parent::getAuthorizationParameters($options);
         unset($params['approval_prompt']);
-        if (!empty($options['prompt'])) {
+        if (!empty($options['prompt'])) { {
             $params['prompt'] = $options['prompt'];
         }
 
@@ -159,64 +113,39 @@ class Fitbit extends AbstractProvider
     }
 
     /**
-     * Generates a resource owner object from a successful resource owner
-     * details request.
-     *
-     * @param array       $response
-     * @param AccessToken $token
-     *
-     * @return FitbitUser
+     * @param array<string, mixed> $response
      */
-    public function createResourceOwner(array $response, AccessToken $token)
+    public function createResourceOwner(array $response, AccessToken $token): FitbitUser
     {
         return new FitbitUser($response);
     }
 
-    /**
-     * Returns the key used in the access token response to identify the resource owner.
-     *
-     * @return string|null Resource owner identifier key
-     */
-    protected function getAccessTokenResourceOwnerId()
+    protected function getAccessTokenResourceOwnerId(): ?string
     {
         return 'user_id';
     }
 
-    /**
-     * Revoke access for the given token.
-     *
-     * @param AccessToken $accessToken
-     *
-     * @return mixed
-     */
-    public function revoke(AccessToken $accessToken)
+    public function revoke(AccessToken $accessToken): ResponseInterface
     {
-        $options = $this->getOptionProvider()
-            ->getAccessTokenOptions(self::METHOD_POST, []);
+        $options = $this->optionProvider->getAccessTokenOptions(self::METHOD_POST, []);
 
         $uri = $this->appendQuery(
-            self::BASE_FITBIT_API_URL.'/oauth2/revoke',
+            self::BASE_FITBIT_API_URL . '/oauth2/revoke',
             $this->buildQueryString(['token' => $accessToken->getToken()])
         );
+
         $request = $this->getRequest(self::METHOD_POST, $uri, $options);
 
         return $this->getResponse($request);
     }
 
-    public function parseResponse(ResponseInterface $response)
+    public function parseResponse(ResponseInterface $response): mixed
     {
         return parent::parseResponse($response);
     }
 
-    /**
-     * Parse Fitbit API Rate Limit headers and return a FitbitRateLimit object.
-     *
-     * @param ResponseInterface $response
-     *
-     * @return FitbitRateLimit Fitbit API Rate Limit information
-     */
-    public function getFitbitRateLimit(ResponseInterface $response)
+    public function getFitbitRateLimit(ResponseInterface $response): FitbitRateLimit
     {
-        return new FitbitRateLimit($response);
+        return FitbitRateLimit::fromResponse($response);
     }
 }
