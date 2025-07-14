@@ -10,10 +10,7 @@ Developers can register applications to use the Fitbit API at <https://dev.fitbi
 
 The following versions of PHP are supported.
 
-* PHP 5.6
-* PHP 7.0
-* PHP 7.1
-* HHVM
+* PHP 8.3
 
 ## Installation
 
