@@ -1,4 +1,4 @@
-```markdown
+
 # Fitbit Provider for OAuth 2.0 Client
 
 This package provides Fitbit OAuth 2.0 support for the PHP League's [OAuth 2.0 Client](https://github.com/thephpleague/oauth2-client).
@@ -14,10 +14,10 @@ The following versions of PHP are supported.
 ## Installation
 
 To install, use composer:
+```markdown
 
-```
 composer require mousel68/oauth2-mousel-fitbit
-```
+
 
 ## Usage
 
