@@ -18,7 +18,7 @@ To install, use composer:
 
 composer require mousel68/oauth2-mousel-fitbit
 
-
+```
 ## Usage
 
 ### Authorization Code Grant
