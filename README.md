@@ -1,6 +1,8 @@
-# Fitbit Provider for OAuth 2.0 Client
+# Fitbit Provider for OAuth 2.0 Client (Modified)
 
 This package provides Fitbit OAuth 2.0 support for the PHP League's [OAuth 2.0 Client](https://github.com/thephpleague/oauth2-client).
+
+This is a modified fork of [djchen/oauth2-fitbit](https://github.com/djchen/oauth2-fitbit) with updates for PHP 8.x compatibility and additional features.
 
 This package is compliant with [PSR-1][], [PSR-2][], [PSR-4][], and [PSR-7][]. If you notice compliance oversights, please send a patch via pull request.
 
@@ -10,17 +12,34 @@ Developers can register applications to use the Fitbit API at <https://dev.fitbi
 
 The following versions of PHP are supported.
 
-* PHP 5.6
-* PHP 7.0
-* PHP 7.1
-* HHVM
+* PHP 7.4
+* PHP 8.0
+* PHP 8.1
+* PHP 8.2
+* PHP 8.3
 
 ## Installation
 
 To install, use composer:
 
 ```
-composer require djchen/oauth2-fitbit
+composer require mousel68/oauth2-mousel-fitbit
+```
+
+Or add to your `composer.json`:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/mousel68/oauth2-mousel-fitbit"
+        }
+    ],
+    "require": {
+        "djchen/oauth2-fitbit": "dev-master"
+    }
+}
 ```
 
 ## Usage
@@ -133,6 +152,14 @@ if ($existingAccessToken->hasExpired()) {
 }
 ```
 
+## Changes from Original
+
+This fork includes the following modifications:
+
+- PHP 8.x compatibility fixes
+- Updated dependencies
+- Bug fixes and optimizations
+
 ## Testing
 
 ``` bash
@@ -141,11 +168,16 @@ $ ./vendor/bin/phpunit
 
 ## Contributing
 
-Please see [CONTRIBUTING](https://github.com/djchen/oauth2-fitbit/blob/master/CONTRIBUTING.md) for details.
+Please see [CONTRIBUTING](https://github.com/mousel68/oauth2-mousel-fitbit/blob/master/CONTRIBUTING.md) for details.
+
+## Credits
+
+- [Dan Chen](https://github.com/djchen) - Original author
+- [mousel68](https://github.com/mousel68) - Fork maintainer
 
 ## License
 
-The MIT License (MIT). Please see [License File](https://github.com/djchen/oauth2-fitbit/blob/master/LICENSE) for more information.
+The MIT License (MIT). Please see [License File](https://github.com/mousel68/oauth2-mousel-fitbit/blob/master/LICENSE) for more information.
 
 [PSR-1]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-1-basic-coding-standard.md
 [PSR-2]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md
